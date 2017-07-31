@@ -25,19 +25,45 @@ function initialPrompt() {
     var query = "SELECT stock_quantity FROM products WHERE ?"
     connection.query(query, { item_id: answer.id }, function(err, res) {
       if (err) throw err;
-      var stockLeft = res[0].stock_quantity - answer.how_many
+      var inStock = res[0].stock_quantity
+      var quantRequested = answer.how_many
+      var stockDif = inStock - quantRequested
       switch (true) {
-        case stockLeft <= 0:
-          console.log("Not enough quantity! We only have " + res[0].stock_quantity + " in stock.");
-          break;
-        case stockLeft > 0:
-          console.log(stockLeft);
-          break;
+        case stockDif <= 0:
+          console.log("Sorry! We only have " + inStock + " in stock.");
+        break;
+        case stockDif > 0:
+          console.log("Order placed!");
+          // updates the quantity of the product when an order is successfully placed
+          function updateQuantity() {
+            var query = connection.query(
+              "UPDATE products SET ? WHERE ?",
+              [
+                {
+                  stock_quantity: stockDif
+                },
+                {
+                  item_id: answer.id
+                }
+              ],
+              function(err, res) {
+                // totalPrice();
+                console.log(stockDif + " left in stock. Get em while they last chief!");
+              }
+            );
+          }
+          updateQuantity();
+        break;
 
       }
     });
   });
 }
+
+// function totalPrice() {
+//   var itemPrice = ;
+//   var totalPrice = itemPrice * quantRequested;
+// }
 
 // presents the user with a list of all available products
 function readProducts() {
